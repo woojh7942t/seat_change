@@ -44,28 +44,29 @@
             border-radius: 4px;
         }
         
-        /* 인쇄 및 PDF 저장 시 적용될 스타일 - 1장에 꽉 차게 출력되도록 수정 */
+        /* 인쇄 및 PDF 저장 시 적용될 스타일 - 무조건 1장에 꽉 차게 출력되도록 강력한 제어 */
         @media print {
             @page { 
                 size: A4 landscape; /* 가로 방향 인쇄 */
-                margin: 10mm; 
+                margin: 8mm; 
             }
             body, html { 
                 background-color: white !important; 
                 margin: 0 !important; 
                 padding: 0 !important; 
-                height: 100% !important; 
-                overflow: hidden !important; 
+                height: 100vh !important; /* 1페이지 높이 고정 */
+                overflow: hidden !important; /* 다음 장으로 넘어가는 것 방지 */
             }
-            .min-h-screen { min-height: auto !important; height: 100vh !important; }
+            .min-h-screen { min-height: 0 !important; height: 100vh !important; }
             .no-print { display: none !important; }
             .max-w-[1400px] { 
                 max-width: 100% !important; 
                 width: 100% !important; 
-                height: 100% !important;
+                height: 100vh !important;
                 margin: 0 !important; 
                 padding: 0 !important; 
                 box-shadow: none !important; 
+                border: none !important;
             }
             .print-full { 
                 width: 100% !important; 
@@ -76,20 +77,52 @@
                 display: flex !important; 
                 flex-direction: column !important; 
             }
-            /* 칠판 및 자리배치 영역이 페이지 중앙에 오도록 조절 */
+            /* 칠판 및 자리배치 영역이 페이지에 꽉 차도록 조절 */
             .print-full > .flex-1 { 
                 padding: 0 !important; 
                 overflow: hidden !important; 
-                display: flex; 
-                flex-direction: column; 
-                justify-content: center; 
-                align-items: center; 
+                display: flex !important; 
+                flex-direction: column !important; 
+                justify-content: flex-start !important; 
+                align-items: center !important; 
+                height: 100% !important;
             }
+            
+            /* 칠판, 교탁 크기와 여백 최소화하여 책상 공간 확보 */
+            .chalkboard-bg { 
+                height: 35px !important; 
+                min-height: 35px !important; 
+                margin-bottom: 10px !important; 
+                border-width: 2px !important;
+                width: 80% !important;
+            }
+            .chalkboard-bg span { font-size: 1rem !important; }
+            .bg-amber-700 { /* 교탁 */
+                height: 25px !important; 
+                min-height: 25px !important; 
+                margin-bottom: 10px !important; 
+            }
+            
+            /* 자리 배치도 컨테이너가 남은 전체 영역을 꽉 채우도록 설정 */
             #seatingContainer { 
-                max-width: 95% !important; 
+                flex: 1 !important;
+                max-width: 100% !important; 
                 width: 100% !important; 
-                margin-top: 15px !important; 
+                margin-top: 0 !important; 
+                gap: 4px !important;
+                display: grid !important;
+                align-content: stretch !important; /* 내부 요소가 높이에 꽉 차게 늘어남 */
             }
+            
+            /* 책상이 부모 높이에 맞춰 유연하게 변하도록 강제 (비율 고정 해제) */
+            .desk {
+                aspect-ratio: auto !important;
+                height: 100% !important;
+                min-height: 0 !important;
+                padding: 2px !important;
+            }
+            .desk .student-info { padding: 0 !important; }
+            
             /* 배경색, 테두리 등 정확한 출력을 위한 설정 */
             * { 
                 -webkit-print-color-adjust: exact !important; 
@@ -153,7 +186,7 @@
             </div>
         </div>
 
-        <div class="flex-1 bg-white p-6 overflow-y-auto flex flex-col items-center">
+        <div class="flex-1 bg-white p-6 overflow-y-auto flex flex-col items-center w-full">
             <!-- 칠판 -->
             <div class="w-full max-w-2xl h-16 sm:h-20 chalkboard-bg rounded-lg border-4 border-gray-700 shadow-inner flex items-center justify-center mb-8 relative">
                 <span class="text-white/80 font-bold tracking-widest text-lg sm:text-xl">칠판 (FRONT)</span>
@@ -319,7 +352,9 @@
                 if(data.deskStates && data.deskStates.length > 0) {
                     currentCols = parseInt(colsInput.value) || 5;
                     currentRows = parseInt(rowsInput.value) || 5;
+                    // 열과 행의 비율을 강제로 분할하여 한 페이지에 무조건 들어오도록 수정
                     seatingContainer.style.gridTemplateColumns = `repeat(${currentCols}, minmax(0, 1fr))`;
+                    seatingContainer.style.gridTemplateRows = `repeat(${currentRows}, minmax(0, 1fr))`;
                     seatingContainer.innerHTML = '';
                     
                     data.deskStates.forEach((deskState, i) => {
@@ -350,10 +385,8 @@
                             const hasStudent = infoContainer && infoContainer.querySelector('span.text-indigo-600');
                             
                             if (hasStudent) {
-                                // 학생이 있는 자리를 클릭하면 고정(Pinned) 상태 토글
                                 this.classList.toggle('pinned');
                             } else {
-                                // 빈 자리를 클릭하면 사용 불가(Locked) 상태 토글
                                 this.classList.toggle('locked');
                             }
                             saveData();
@@ -453,7 +486,9 @@
         currentRows = parseInt(rowsInput.value) || 5;
         const totalDesks = currentCols * currentRows;
 
+        // 열과 행의 비율을 강제로 분할하여 한 페이지에 무조건 들어오도록 수정
         seatingContainer.style.gridTemplateColumns = `repeat(${currentCols}, minmax(0, 1fr))`;
+        seatingContainer.style.gridTemplateRows = `repeat(${currentRows}, minmax(0, 1fr))`;
         seatingContainer.innerHTML = '';
 
         for (let i = 0; i < totalDesks; i++) {
@@ -469,10 +504,8 @@
                 const hasStudent = infoContainer && infoContainer.querySelector('span.text-indigo-600');
                 
                 if (hasStudent) {
-                    // 학생이 있는 자리를 클릭하면 고정(Pinned) 토글
                     this.classList.toggle('pinned');
                 } else {
-                    // 빈 자리를 클릭하면 사용 불가(Locked) 토글
                     this.classList.toggle('locked');
                 }
                 saveData();
@@ -506,7 +539,6 @@
             return;
         }
 
-        // 1. 고정된(Pinned) 자리와 해당 학생 번호 파악
         const pinnedDesks = Array.from(seatingContainer.querySelectorAll('.desk.pinned'));
         const pinnedStudentNums = new Set();
         
@@ -521,10 +553,7 @@
             }
         });
 
-        // 2. 섞어야 할 대상 학생 필터링 (고정된 학생 제외)
         const studentsToShuffle = studentData.filter(s => !pinnedStudentNums.has(s.num));
-
-        // 3. 배치 가능한 빈 책상 필터링 (사용 불가 자리 및 고정된 자리 제외)
         const availableDesks = Array.from(seatingContainer.querySelectorAll('.desk:not(.locked):not(.pinned)'));
 
         if (availableDesks.length < studentsToShuffle.length) {
@@ -535,7 +564,6 @@
             return;
         }
 
-        // 4. 고정되지 않은(not pinned) 기존 책상 정보만 초기화
         seatingContainer.querySelectorAll('.desk:not(.pinned)').forEach(desk => {
             const infoContainer = desk.querySelector('.student-info');
             if(infoContainer) { 
@@ -544,7 +572,6 @@
             }
         });
 
-        // 5. 남은 학생들과 남은 자리를 섞어서 배치
         const shuffledStudents = shuffleArray(studentsToShuffle);
         const shuffledDesks = shuffleArray(availableDesks);
 
@@ -573,14 +600,12 @@
             const cleanLine = line.trim();
             if(!cleanLine) return;
             
-            // 정규식 수정: 맨 앞의 숫자를 찾고, 나머지 부분에서 특수문자/공백 제거 후 이름으로 인식
             const numMatch = cleanLine.match(/^(\d+)/);
             if(numMatch) {
                 const num = parseInt(numMatch[1]);
-                // 숫자 길이만큼 자른 후, 앞에 붙은 공백, 점, 하이픈 등을 제거
                 const name = cleanLine.substring(numMatch[0].length).replace(/^[.\s\-_]+/, '').trim();
                 
-                if (!name) return; // 이름이 없으면 무시
+                if (!name) return;
                 
                 const existingIndex = studentData.findIndex(s => s.num === num);
                 if(existingIndex >= 0) studentData[existingIndex].name = name;
@@ -597,34 +622,29 @@
         window.closeModal();
     });
 
-    // 명단 초기화 버튼 이벤트 (2번 클릭으로 안전 장치)
     let resetTimeout;
     resetStudentsBtn.addEventListener('click', () => {
         if (resetStudentsBtn.innerText === "정말 초기화?") {
             studentData = [];
-            // 자리 배치도에 배정된 학생 정보도 모두 초기화
             seatingContainer.querySelectorAll('.desk').forEach(desk => {
                 const infoContainer = desk.querySelector('.student-info');
                 if(infoContainer) {
                     infoContainer.innerHTML = '';
                     infoContainer.classList.remove('bg-indigo-50', 'border-indigo-200');
                 }
-                desk.classList.remove('pinned'); // 고정 상태도 함께 초기화
+                desk.classList.remove('pinned'); 
             });
             renderStudentList();
             
-            // 버튼 상태 원상복구
             resetStudentsBtn.innerText = "명단 초기화";
             resetStudentsBtn.classList.remove('bg-red-500', 'text-white');
             resetStudentsBtn.classList.add('bg-red-100', 'text-red-700');
             clearTimeout(resetTimeout);
         } else {
-            // 첫 번째 클릭: 경고 상태로 변경
             resetStudentsBtn.innerText = "정말 초기화?";
             resetStudentsBtn.classList.remove('bg-red-100', 'text-red-700');
             resetStudentsBtn.classList.add('bg-red-500', 'text-white');
             
-            // 3초 후 취소 처리
             resetTimeout = setTimeout(() => {
                 resetStudentsBtn.innerText = "명단 초기화";
                 resetStudentsBtn.classList.remove('bg-red-500', 'text-white');
@@ -633,7 +653,6 @@
         }
     });
 
-    // 앱 초기화 실행
     if(auth) { initAuth(); } 
     else { isDataLoaded = true; renderStudentList(); generateDesks(); }
 </script>
