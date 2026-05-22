@@ -12,131 +12,694 @@
         .desk { transition: all 0.2s; }
         .desk.locked { background-color: #e5e7eb; border-color: #9ca3af; opacity: 0.7; }
         .desk.locked .student-info { display: none; }
-        .desk.locked::after { content: '사용 불가'; position: absolute; color: #6b7280; font-size: 0.75rem; font-weight: 600; }
+        .desk.locked::after {
+            content: '사용 불가';
+            position: absolute;
+            color: #6b7280;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
         
-        .desk:not(.locked):hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-color: #3b82f6; }
-        .desk.pinned { border-color: #f43f5e; border-width: 2px; }
-        .desk.pinned::after { content: '🔒 고정'; position: absolute; top: 2px; right: 2px; color: #e11d48; font-size: 0.6rem; font-weight: 700; background-color: #ffe4e6; padding: 1px 3px; border-radius: 4px; }
-        
-        @media print {
-            @page { size: A4 landscape; margin: 8mm; }
-            body, html { background-color: white !important; margin: 0 !important; padding: 0 !important; height: 100vh !important; }
-            .no-print { display: none !important; }
-            .print-full { width: 100% !important; height: 100vh !important; }
-            
-            body.teacher-print .chalkboard-bg { order: 3 !important; margin-top: 15px !important; }
-            body.teacher-print .bg-amber-700 { order: 2 !important; margin-bottom: 15px !important; }
-            body.teacher-print #seatingContainer { order: 1 !important; transform: rotate(180deg) !important; margin-bottom: 20px !important; }
-            body.teacher-print .desk { transform: rotate(180deg) !important; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        .desk:not(.locked):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-color: #3b82f6;
         }
 
-        .chalkboard-bg { background-color: #2d4a22; background-image: radial-gradient(#3a5c2d 1px, transparent 1px); background-size: 20px 20px; }
+        /* 학생 자리 고정(핀) 스타일 추가 */
+        .desk.pinned {
+            border-color: #f43f5e;
+            border-width: 2px;
+        }
+        .desk.pinned::after {
+            content: '🔒 고정됨';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            color: #e11d48;
+            font-size: 0.65rem;
+            font-weight: 700;
+            background-color: #ffe4e6;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        
+        /* 인쇄 및 PDF 저장 시 적용될 스타일 - 무조건 1장에 꽉 차게 출력되도록 강력한 제어 */
+        @media print {
+            @page { 
+                size: A4 landscape; /* 가로 방향 인쇄 */
+                margin: 8mm; 
+            }
+            body, html { 
+                background-color: white !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                height: 100vh !important; /* 1페이지 높이 고정 */
+                overflow: hidden !important; /* 다음 장으로 넘어가는 것 방지 */
+            }
+            .min-h-screen { min-height: 0 !important; height: 100vh !important; }
+            .no-print { display: none !important; }
+            .max-w-[1400px] { 
+                max-width: 100% !important; 
+                width: 100% !important; 
+                height: 100vh !important;
+                margin: 0 !important; 
+                padding: 0 !important; 
+                box-shadow: none !important; 
+                border: none !important;
+            }
+            .print-full { 
+                width: 100% !important; 
+                height: 100% !important; 
+                padding: 0 !important; 
+                box-shadow: none !important; 
+                border: none !important; 
+                display: flex !important; 
+                flex-direction: column !important; 
+            }
+            /* 칠판 및 자리배치 영역이 페이지에 꽉 차도록 조절 */
+            .print-full > .flex-1 { 
+                padding: 0 !important; 
+                overflow: hidden !important; 
+                display: flex !important; 
+                flex-direction: column !important; 
+                justify-content: flex-start !important; 
+                align-items: center !important; 
+                height: 100% !important;
+            }
+            
+            /* 칠판, 교탁 크기와 여백 최소화하여 책상 공간 확보 */
+            .chalkboard-bg { 
+                height: 35px !important; 
+                min-height: 35px !important; 
+                margin-bottom: 10px !important; 
+                border-width: 2px !important;
+                width: 80% !important;
+            }
+            .chalkboard-bg span { font-size: 1rem !important; }
+            .bg-amber-700 { /* 교탁 */
+                height: 25px !important; 
+                min-height: 25px !important; 
+                margin-bottom: 10px !important; 
+            }
+            
+            /* 자리 배치도 컨테이너가 남은 전체 영역을 꽉 채우도록 설정 */
+            #seatingContainer { 
+                flex: 1 !important;
+                max-width: 100% !important; 
+                width: 100% !important; 
+                margin-top: 0 !important; 
+                gap: 4px !important;
+                display: grid !important;
+                align-content: stretch !important; /* 내부 요소가 높이에 꽉 차게 늘어남 */
+            }
+            
+            /* 책상이 부모 높이에 맞춰 유연하게 변하도록 강제 (비율 고정 해제) */
+            .desk {
+                aspect-ratio: auto !important;
+                height: 100% !important;
+                min-height: 0 !important;
+                padding: 2px !important;
+            }
+            .desk .student-info { padding: 0 !important; }
+            
+            /* 배경색, 테두리 등 정확한 출력을 위한 설정 */
+            * { 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            }
+
+            /* 교사용 인쇄 모드 (칠판과 교탁이 아래로 가고, 좌우/상하가 반전된 시점) */
+            body.teacher-print .chalkboard-bg {
+                order: 3 !important; /* 가장 아래로 이동 */
+                margin-bottom: 0 !important;
+                margin-top: 15px !important;
+            }
+            body.teacher-print .bg-amber-700 { /* 교탁 */
+                order: 2 !important; /* 칠판 바로 위로 이동 */
+                margin-bottom: 15px !important;
+            }
+            body.teacher-print #seatingContainer {
+                order: 1 !important; /* 가장 위로 이동 */
+                transform: rotate(180deg) !important; /* 시점 반전을 위해 180도 회전 */
+                margin-bottom: 20px !important;
+                margin-top: 0 !important;
+            }
+            body.teacher-print .desk {
+                transform: rotate(180deg) !important; /* 글씨가 똑바로 보이도록 책상 내부를 다시 180도 회전 */
+            }
+        }
+
+        .chalkboard-bg {
+            background-color: #2d4a22;
+            background-image: radial-gradient(#3a5c2d 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
     </style>
 </head>
-<body class="min-h-screen p-4 flex justify-center text-gray-800">
+<body class="min-h-screen p-4 md:p-8 flex justify-center text-gray-800">
 
 <div class="max-w-[1400px] w-full flex flex-col lg:flex-row gap-6 items-start">
+    <!-- Left: Seating Chart -->
     <div class="flex-[5] w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col print-full border border-gray-100">
+        
+        <!-- Header -->
         <div class="bg-blue-600 text-white py-4 px-6 flex justify-between items-center no-print">
-            <h2 class="text-xl font-bold">교실 자리 배치도</h2>
+            <div class="flex items-center gap-3">
+                <h2 class="text-xl font-bold">교실 자리 배치도</h2>
+                <select id="monthSelect" class="text-blue-900 bg-white border-none rounded px-2 py-1 text-sm font-bold shadow-sm focus:outline-none cursor-pointer">
+                    <option value="1">1월</option><option value="2">2월</option><option value="3" selected>3월</option>
+                    <option value="4">4월</option><option value="5">5월</option><option value="6">6월</option>
+                    <option value="7">7월</option><option value="8">8월</option><option value="9">9월</option>
+                    <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+                </select>
+            </div>
         </div>
 
-        <div class="p-4 border-b border-gray-100 flex flex-wrap gap-2 items-end bg-gray-50 no-print">
-            <div class="w-20"><label class="block text-xs text-gray-600 mb-1">세로(열)</label><select id="cols" class="w-full border rounded px-2 py-1.5 text-sm"></select></div>
-            <div class="w-20"><label class="block text-xs text-gray-600 mb-1">가로(행)</label><select id="rows" class="w-full border rounded px-2 py-1.5 text-sm"></select></div>
-            <button id="generateBtn" class="bg-blue-600 text-white px-4 py-1.5 rounded text-sm">자리 생성</button>
-            <button id="printBtn" class="bg-emerald-500 text-white px-4 py-1.5 rounded text-sm">학생용 출력</button>
-            <button id="teacherPrintBtn" class="bg-teal-600 text-white px-4 py-1.5 rounded text-sm">교사용 출력</button>
+        <!-- Settings -->
+        <div class="p-4 border-b border-gray-100 flex flex-wrap gap-4 items-end bg-gray-50 no-print">
+            <div class="flex-1 min-w-[100px] max-w-[120px]">
+                <label for="cols" class="block text-sm font-medium text-gray-700 mb-1">세로(열)</label>
+                <select id="cols" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-white cursor-pointer">
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5" selected>5</option><option value="6">6</option>
+                    <option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                </select>
+            </div>
+            <div class="flex-1 min-w-[100px] max-w-[120px]">
+                <label for="rows" class="block text-sm font-medium text-gray-700 mb-1">가로(행)</label>
+                <select id="rows" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border bg-white cursor-pointer">
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5" selected>5</option><option value="6">6</option>
+                    <option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                </select>
+            </div>
+            
+            <div class="flex gap-2 w-full flex-wrap">
+                <button id="generateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md shadow-sm transition-colors text-sm flex-1 md:flex-none whitespace-nowrap">자리 생성</button>
+                <button id="randomAssignBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-md shadow-sm transition-colors text-sm flex-1 md:flex-none whitespace-nowrap">랜덤 배치</button>
+                <button id="resetLockBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md shadow-sm transition-colors text-sm flex-1 md:flex-none whitespace-nowrap">잠금 초기화</button>
+                
+                <button id="printBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2 px-3 rounded-md shadow-sm transition-colors text-sm flex-1 md:flex-none flex items-center justify-center gap-1 whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    학생용 출력
+                </button>
+                <button id="teacherPrintBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-3 rounded-md shadow-sm transition-colors text-sm flex-1 md:flex-none flex items-center justify-center gap-1 whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    교사용 출력
+                </button>
+            </div>
         </div>
 
-        <div class="flex-1 p-6 flex flex-col items-center w-full overflow-y-auto">
-            <div class="w-full max-w-2xl h-12 chalkboard-bg rounded border-4 border-gray-700 flex items-center justify-center mb-6"><span class="text-white font-bold">칠판</span></div>
-            <div id="seatingContainer" class="grid gap-2 w-full max-w-4xl place-content-center"></div>
+        <div class="flex-1 bg-white p-6 overflow-y-auto flex flex-col items-center w-full">
+            <!-- 칠판 -->
+            <div class="w-full max-w-2xl h-16 sm:h-20 chalkboard-bg rounded-lg border-4 border-gray-700 shadow-inner flex items-center justify-center mb-8 relative">
+                <span class="text-white/80 font-bold tracking-widest text-lg sm:text-xl">칠판 (FRONT)</span>
+                <div class="absolute bottom-2 right-4 w-12 h-2 bg-white/20 rounded-sm"></div>
+            </div>
+            
+            <!-- 교탁 -->
+            <div class="w-24 h-12 bg-amber-700 rounded shadow-md border-b-4 border-amber-800 mb-10 flex items-center justify-center text-amber-100 text-xs font-bold">
+                교탁
+            </div>
+
+            <!-- 자리 배치 컨테이너 -->
+            <div id="seatingContainer" class="grid gap-3 w-full max-w-4xl place-content-center">
+                <p class="text-gray-400 col-span-full text-center py-10">위의 '자리 생성' 버튼을 클릭하여 배치를 시작하세요.</p>
+            </div>
+
+            <div class="mt-8 flex gap-6 text-sm text-gray-600 justify-center w-full no-print flex-wrap">
+                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-white border border-gray-300 rounded shadow-sm"></div><span>빈자리 (클릭: 사용불가)</span></div>
+                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-gray-200 border border-gray-400 rounded shadow-sm"></div><span>사용 불가</span></div>
+                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-indigo-50 border border-indigo-200 rounded shadow-sm"></div><span>배정 완료 (클릭: 자리 고정)</span></div>
+                <div class="flex items-center gap-2"><div class="w-4 h-4 bg-indigo-50 border-2 border-rose-500 rounded shadow-sm"></div><span>학생 고정됨</span></div>
+            </div>
         </div>
     </div>
 
-    <div class="flex-[2] w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-[500px] no-print">
-        <div class="bg-indigo-600 text-white py-4 px-5 font-bold">학생 명단 관리</div>
-        <div class="p-4 bg-indigo-50 border-b flex gap-2">
-            <input type="number" id="singleNumInput" class="w-14 border rounded px-1 text-sm" placeholder="번호">
-            <input type="text" id="singleNameInput" class="flex-1 border rounded px-2 text-sm" placeholder="이름">
-            <button id="addSingleBtn" class="bg-indigo-600 text-white px-3 rounded text-sm">+</button>
+    <!-- Right: Student List -->
+    <div class="flex-[2] w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col h-full lg:sticky lg:top-10 no-print border border-gray-100 min-h-[500px]">
+        <div class="bg-indigo-600 text-white py-4 px-5 flex justify-between items-center">
+            <h2 class="text-lg font-bold">학생 명단 관리</h2>
+            <span id="studentCount" class="bg-indigo-800 px-2 py-1 rounded text-xs font-bold">총 0명</span>
         </div>
-        <div id="studentListContainer" class="flex-1 overflow-y-auto p-2"></div>
-        <button id="resetStudentsBtn" class="m-4 bg-red-100 text-red-700 py-2 rounded text-sm font-bold">명단 전체 초기화</button>
+
+        <div class="p-4 border-b border-gray-100 bg-indigo-50/50">
+            <div class="flex gap-2 mb-3">
+                <button onclick="openModal()" class="flex-[3] bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-semibold py-2 px-4 rounded-md transition-colors text-sm border border-indigo-200 shadow-sm">
+                    + 일괄 추가
+                </button>
+                <button id="resetStudentsBtn" class="flex-[1] bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 px-4 rounded-md transition-colors text-sm border border-red-200 shadow-sm whitespace-nowrap">
+                    명단 초기화
+                </button>
+            </div>
+            <div class="flex gap-2 items-center">
+                <input type="number" id="singleNumInput" placeholder="번호" class="w-16 border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <input type="text" id="singleNameInput" placeholder="이름 입력 후 엔터" class="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <button id="addSingleBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-1.5 rounded-md shadow-sm transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-2 bg-gray-50" id="studentListContainer">
+            <!-- 명단 리스트 -->
+            <div class="text-center text-gray-400 text-sm py-10">등록된 학생이 없습니다.</div>
+        </div>
     </div>
 </div>
 
-<script>
-    let studentData = JSON.parse(localStorage.getItem('seating_students')) || [];
+<!-- Bulk Add Modal -->
+<div id="bulkModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex justify-center items-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">명단 일괄 추가</h3>
+            <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        <div class="p-6">
+            <p class="text-sm text-gray-600 mb-3">엑셀이나 메모장에서 복사한 명단을 아래에 붙여넣으세요. (번호와 이름 자동 인식)</p>
+            <textarea id="bulkInput" class="w-full h-48 border border-gray-300 rounded-md p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none" placeholder="예시:&#10;1 홍길동&#10;2 김철수&#10;3 이영희"></textarea>
+        </div>
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+            <button id="cancelModalBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">취소</button>
+            <button id="applyBulkBtn" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 shadow-sm">등록하기</button>
+        </div>
+    </div>
+</div>
 
-    const studentListContainer = document.getElementById('studentListContainer');
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+    
+    let db, auth, currentUser;
+    let isDataLoaded = false;
+
+    if (firebaseConfig) {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+    }
+
+    const colsInput = document.getElementById('cols');
+    const rowsInput = document.getElementById('rows');
+    const generateBtn = document.getElementById('generateBtn');
+    const resetLockBtn = document.getElementById('resetLockBtn');
+    const randomAssignBtn = document.getElementById('randomAssignBtn');
+    const printBtn = document.getElementById('printBtn');
+    const teacherPrintBtn = document.getElementById('teacherPrintBtn');
+    const seatingContainer = document.getElementById('seatingContainer');
+    const monthSelect = document.getElementById('monthSelect');
+
     const singleNumInput = document.getElementById('singleNumInput');
     const singleNameInput = document.getElementById('singleNameInput');
     const addSingleBtn = document.getElementById('addSingleBtn');
+    const studentListContainer = document.getElementById('studentListContainer');
+    const studentCount = document.getElementById('studentCount');
+    
+    const bulkModal = document.getElementById('bulkModal');
+    const bulkInput = document.getElementById('bulkInput');
+    const applyBulkBtn = document.getElementById('applyBulkBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
     const resetStudentsBtn = document.getElementById('resetStudentsBtn');
 
-    function saveToBrowser() {
-        localStorage.setItem('seating_students', JSON.stringify(studentData));
+    let studentData = [];
+    let currentCols = 5;
+    let currentRows = 5;
+
+    async function saveData() {
+        if (!currentUser || !isDataLoaded || !db) return;
+        const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'seating_data', 'current');
+        
+        const deskStates = [];
+        const allDesks = seatingContainer.querySelectorAll('.desk');
+        allDesks.forEach((desk, index) => {
+            const isLocked = desk.classList.contains('locked');
+            const isPinned = desk.classList.contains('pinned');
+            let assignedNum = null;
+            const infoContainer = desk.querySelector('.student-info');
+            if (infoContainer && infoContainer.querySelector('span.text-indigo-600')) {
+                const numText = infoContainer.querySelector('span.text-indigo-600').innerText;
+                assignedNum = parseInt(numText.replace('번', ''));
+            }
+            deskStates.push({ index, isLocked, isPinned, assignedNum });
+        });
+
+        const data = {
+            month: monthSelect.value,
+            rows: rowsInput.value,
+            cols: colsInput.value,
+            studentData: studentData,
+            deskStates: deskStates
+        };
+        try { await setDoc(docRef, data); } catch (e) { console.error("Save failed", e); }
     }
+
+    async function loadData() {
+        if (!currentUser || !db) { isDataLoaded = true; return; }
+        const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'seating_data', 'current');
+        try {
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if(data.month) monthSelect.value = data.month;
+                if(data.rows) rowsInput.value = data.rows;
+                if(data.cols) colsInput.value = data.cols;
+                
+                if(data.studentData) {
+                    studentData = data.studentData;
+                    renderStudentList();
+                }
+                
+                if(data.deskStates && data.deskStates.length > 0) {
+                    currentCols = parseInt(colsInput.value) || 5;
+                    currentRows = parseInt(rowsInput.value) || 5;
+                    // 열과 행의 비율을 강제로 분할하여 한 페이지에 무조건 들어오도록 수정
+                    seatingContainer.style.gridTemplateColumns = `repeat(${currentCols}, minmax(0, 1fr))`;
+                    seatingContainer.style.gridTemplateRows = `repeat(${currentRows}, minmax(0, 1fr))`;
+                    seatingContainer.innerHTML = '';
+                    
+                    data.deskStates.forEach((deskState, i) => {
+                        const deskEl = document.createElement('div');
+                        deskEl.className = 'desk aspect-[4/3] bg-white border-2 border-gray-300 rounded-lg shadow-sm flex flex-col items-center justify-center p-2 cursor-pointer relative overflow-hidden';
+                        if(deskState.isLocked) deskEl.classList.add('locked');
+                        if(deskState.isPinned) deskEl.classList.add('pinned');
+                        
+                        const rowNum = Math.floor(i / currentCols) + 1;
+                        const colNum = (i % currentCols) + 1;
+
+                        deskEl.innerHTML = `
+                            <span class="text-[10px] sm:text-xs text-gray-400 font-medium mb-1 truncate">${rowNum}-${colNum}</span>
+                            <div class="student-info w-full flex-1 bg-gray-100 border border-gray-200 rounded flex flex-col items-center justify-center min-h-0 p-1"></div>
+                        `;
+                        
+                        if (deskState.assignedNum && studentData.length > 0) {
+                            const student = studentData.find(s => s.num === deskState.assignedNum);
+                            if (student) {
+                                const infoContainer = deskEl.querySelector('.student-info');
+                                infoContainer.innerHTML = `<span class="text-[10px] sm:text-xs font-bold text-indigo-600 mb-0.5">${student.num}번</span><span class="text-xs sm:text-sm font-semibold text-gray-800 text-center truncate w-full">${student.name}</span>`;
+                                infoContainer.classList.add('bg-indigo-50', 'border-indigo-200');
+                            }
+                        }
+                        
+                        deskEl.addEventListener('click', function() {
+                            const infoContainer = this.querySelector('.student-info');
+                            const hasStudent = infoContainer && infoContainer.querySelector('span.text-indigo-600');
+                            
+                            if (hasStudent) {
+                                this.classList.toggle('pinned');
+                            } else {
+                                this.classList.toggle('locked');
+                            }
+                            saveData();
+                        });
+                        seatingContainer.appendChild(deskEl);
+                    });
+                } else { generateDesks(); }
+            } else { generateDesks(); }
+        } catch (e) { console.error("Load failed", e); }
+        isDataLoaded = true;
+    }
+
+    async function initAuth() {
+        if (!auth) return;
+        try {
+            if (typeof __initial_auth_token !== 'undefined') { await signInWithCustomToken(auth, __initial_auth_token); } 
+            else { await signInAnonymously(auth); }
+            currentUser = auth.currentUser;
+            await loadData();
+        } catch (e) { console.error(e); isDataLoaded = true; }
+    }
+
+    let saveTimeout;
+    const triggerSave = (e) => {
+        if (e && e.target && (e.target.closest('#printBtn') || e.target.closest('#teacherPrintBtn'))) return;
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => { if (isDataLoaded) saveData(); }, 500);
+    };
+    document.addEventListener('click', triggerSave);
+    document.addEventListener('input', triggerSave);
+    document.addEventListener('change', triggerSave);
 
     function renderStudentList() {
+        studentData.sort((a, b) => a.num - b.num);
+        studentCount.innerText = `총 ${studentData.length}명`;
+        
+        if (studentData.length === 0) {
+            studentListContainer.innerHTML = '<div class="text-center text-gray-400 text-sm py-10">등록된 학생이 없습니다.</div>';
+            singleNumInput.value = '1';
+            return;
+        }
+
         studentListContainer.innerHTML = '';
-        studentData.sort((a, b) => a.num - b.num).forEach(s => {
-            const div = document.createElement('div');
-            div.className = 'flex justify-between p-2 bg-white border mb-1 rounded text-sm';
-            div.innerHTML = `<span>${s.num}번 ${s.name}</span><button onclick="deleteStudent(${s.num})" class="text-red-500">삭제</button>`;
-            studentListContainer.appendChild(div);
+        studentData.forEach(student => {
+            const item = document.createElement('div');
+            item.className = 'flex justify-between items-center bg-white p-2 mb-1.5 rounded border border-gray-200 shadow-sm';
+            item.innerHTML = `
+                <div class="flex items-center gap-3 w-full">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold text-xs px-2 py-1 rounded w-8 text-center">${student.num}</span>
+                    <input type="text" value="${student.name}" class="flex-1 text-sm font-medium text-gray-800 bg-transparent border-none focus:ring-2 focus:ring-indigo-300 rounded px-1 w-full" data-num="${student.num}">
+                </div>
+                <button class="text-red-400 hover:text-red-600 p-1 ml-2 delete-btn" data-num="${student.num}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+            `;
+            studentListContainer.appendChild(item);
         });
-        saveToBrowser();
+
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const num = parseInt(e.currentTarget.getAttribute('data-num'));
+                studentData = studentData.filter(s => s.num !== num);
+                renderStudentList();
+            });
+        });
+
+        document.querySelectorAll('input[data-num]').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const num = parseInt(e.target.getAttribute('data-num'));
+                const newName = e.target.value.trim();
+                const student = studentData.find(s => s.num === num);
+                if(student && newName) { student.name = newName; }
+            });
+        });
+        
+        const nextNum = Math.max(...studentData.map(s => s.num)) + 1;
+        singleNumInput.value = nextNum;
     }
 
-    window.deleteStudent = (num) => {
-        studentData = studentData.filter(s => s.num !== num);
-        renderStudentList();
-    };
-
-    addSingleBtn.onclick = () => {
+    function addSingleStudent() {
         const num = parseInt(singleNumInput.value);
         const name = singleNameInput.value.trim();
-        if(num && name) {
-            studentData = studentData.filter(s => s.num !== num);
-            studentData.push({num, name});
-            renderStudentList();
-            singleNameInput.value = '';
-        }
-    };
-
-    resetStudentsBtn.onclick = () => { if(confirm('정말 삭제할까요?')) { studentData = []; renderStudentList(); } };
-
-    // 초기화
-    renderStudentList();
-    
-    // 자리 생성 관련 로직은 이전과 동일하게 유지
-    const generateDesks = () => {
-        const cols = parseInt(document.getElementById('cols').value) || 5;
-        const rows = parseInt(document.getElementById('rows').value) || 5;
-        const container = document.getElementById('seatingContainer');
-        container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-        container.innerHTML = '';
-        for(let i=0; i<rows*cols; i++) {
-            const div = document.createElement('div');
-            div.className = 'desk aspect-[4/3] bg-white border-2 rounded flex items-center justify-center p-2 text-xs font-bold';
-            div.innerText = '빈 자리';
-            container.appendChild(div);
-        }
-    };
-
-    // 옵션 세팅
-    for(let i=1; i<=10; i++) {
-        document.getElementById('cols').innerHTML += `<option value="${i}">${i}</option>`;
-        document.getElementById('rows').innerHTML += `<option value="${i}">${i}</option>`;
+        if (!num || !name) return;
+        
+        const existingIndex = studentData.findIndex(s => s.num === num);
+        if (existingIndex >= 0) { studentData[existingIndex].name = name; } 
+        else { studentData.push({ num, name }); }
+        
+        singleNameInput.value = '';
+        renderStudentList();
+        singleNameInput.focus();
     }
-    document.getElementById('generateBtn').onclick = generateDesks;
-    document.getElementById('printBtn').onclick = () => window.print();
-    document.getElementById('teacherPrintBtn').onclick = () => { document.body.classList.add('teacher-print'); window.print(); document.body.classList.remove('teacher-print'); };
-    generateDesks();
+
+    addSingleBtn.addEventListener('click', addSingleStudent);
+    singleNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSingleStudent(); });
+
+    function generateDesks() {
+        currentCols = parseInt(colsInput.value) || 5;
+        currentRows = parseInt(rowsInput.value) || 5;
+        const totalDesks = currentCols * currentRows;
+
+        // 열과 행의 비율을 강제로 분할하여 한 페이지에 무조건 들어오도록 수정
+        seatingContainer.style.gridTemplateColumns = `repeat(${currentCols}, minmax(0, 1fr))`;
+        seatingContainer.style.gridTemplateRows = `repeat(${currentRows}, minmax(0, 1fr))`;
+        seatingContainer.innerHTML = '';
+
+        for (let i = 0; i < totalDesks; i++) {
+            const deskEl = document.createElement('div');
+            deskEl.className = 'desk aspect-[4/3] bg-white border-2 border-gray-300 rounded-lg shadow-sm flex flex-col items-center justify-center p-2 cursor-pointer relative overflow-hidden';
+            
+            const rowNum = Math.floor(i / currentCols) + 1;
+            const colNum = (i % currentCols) + 1;
+            deskEl.innerHTML = `<span class="text-[10px] sm:text-xs text-gray-400 font-medium mb-1 truncate">${rowNum}-${colNum}</span><div class="student-info w-full flex-1 bg-gray-100 border border-gray-200 rounded flex flex-col items-center justify-center min-h-0 p-1"></div>`;
+
+            deskEl.addEventListener('click', function() {
+                const infoContainer = this.querySelector('.student-info');
+                const hasStudent = infoContainer && infoContainer.querySelector('span.text-indigo-600');
+                
+                if (hasStudent) {
+                    this.classList.toggle('pinned');
+                } else {
+                    this.classList.toggle('locked');
+                }
+                saveData();
+            });
+            seatingContainer.appendChild(deskEl);
+        }
+    }
+
+    generateBtn.addEventListener('click', generateDesks);
+    resetLockBtn.addEventListener('click', () => {
+        document.querySelectorAll('.desk.locked').forEach(desk => desk.classList.remove('locked'));
+        document.querySelectorAll('.desk.pinned').forEach(desk => desk.classList.remove('pinned'));
+        saveData();
+    });
+
+    function shuffleArray(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    randomAssignBtn.addEventListener('click', () => {
+        if (studentData.length === 0) {
+            const originalText = randomAssignBtn.innerText;
+            randomAssignBtn.innerText = "명단 필요!";
+            randomAssignBtn.classList.replace('bg-indigo-500', 'bg-red-500');
+            setTimeout(() => { randomAssignBtn.innerText = originalText; randomAssignBtn.classList.replace('bg-red-500', 'bg-indigo-500'); }, 2000);
+            return;
+        }
+
+        const pinnedDesks = Array.from(seatingContainer.querySelectorAll('.desk.pinned'));
+        const pinnedStudentNums = new Set();
+        
+        pinnedDesks.forEach(desk => {
+            const infoContainer = desk.querySelector('.student-info');
+            if (infoContainer) {
+                const numSpan = infoContainer.querySelector('span.text-indigo-600');
+                if (numSpan) {
+                    const num = parseInt(numSpan.innerText.replace('번', ''));
+                    pinnedStudentNums.add(num);
+                }
+            }
+        });
+
+        const studentsToShuffle = studentData.filter(s => !pinnedStudentNums.has(s.num));
+        const availableDesks = Array.from(seatingContainer.querySelectorAll('.desk:not(.locked):not(.pinned)'));
+
+        if (availableDesks.length < studentsToShuffle.length) {
+            const originalText = randomAssignBtn.innerText;
+            randomAssignBtn.innerText = "자리 부족!";
+            randomAssignBtn.classList.replace('bg-indigo-500', 'bg-red-500');
+            setTimeout(() => { randomAssignBtn.innerText = originalText; randomAssignBtn.classList.replace('bg-red-500', 'bg-indigo-500'); }, 2000);
+            return;
+        }
+
+        seatingContainer.querySelectorAll('.desk:not(.pinned)').forEach(desk => {
+            const infoContainer = desk.querySelector('.student-info');
+            if(infoContainer) { 
+                infoContainer.innerHTML = ''; 
+                infoContainer.classList.remove('bg-indigo-50', 'border-indigo-200'); 
+            }
+        });
+
+        const shuffledStudents = shuffleArray(studentsToShuffle);
+        const shuffledDesks = shuffleArray(availableDesks);
+
+        shuffledStudents.forEach((student, index) => {
+            const desk = shuffledDesks[index];
+            const infoContainer = desk.querySelector('.student-info');
+            infoContainer.innerHTML = `<span class="text-[10px] sm:text-xs font-bold text-indigo-600 mb-0.5">${student.num}번</span><span class="text-xs sm:text-sm font-semibold text-gray-800 text-center truncate w-full">${student.name}</span>`;
+            infoContainer.classList.add('bg-indigo-50', 'border-indigo-200');
+        });
+        
+        saveData();
+    });
+
+    // 일반 인쇄 (학생 기준)
+    printBtn.addEventListener('click', () => window.print());
+
+    // 선생님용 인쇄 (칠판과 책상이 반대로)
+    teacherPrintBtn.addEventListener('click', () => {
+        document.body.classList.add('teacher-print');
+        // 브라우저가 CSS 렌더링을 마칠 수 있도록 약간의 지연 후 인쇄
+        setTimeout(() => {
+            window.print();
+            // 안전장치: 인쇄 창이 무시되거나 에러가 났을 때를 대비해 클래스 제거
+            setTimeout(() => {
+                document.body.classList.remove('teacher-print');
+            }, 1000);
+        }, 100);
+    });
+
+    // 인쇄 창이 닫히면 원래 상태로 복구
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('teacher-print');
+    });
+
+    window.openModal = function() { bulkModal.classList.remove('hidden'); };
+    window.closeModal = function() { bulkModal.classList.add('hidden'); };
+    closeModalBtn.addEventListener('click', window.closeModal);
+    cancelModalBtn.addEventListener('click', window.closeModal);
+
+    applyBulkBtn.addEventListener('click', () => {
+        const text = bulkInput.value;
+        const lines = text.split('\n');
+        
+        lines.forEach(line => {
+            const cleanLine = line.trim();
+            if(!cleanLine) return;
+            
+            const numMatch = cleanLine.match(/^(\d+)/);
+            if(numMatch) {
+                const num = parseInt(numMatch[1]);
+                const name = cleanLine.substring(numMatch[0].length).replace(/^[.\s\-_]+/, '').trim();
+                
+                if (!name) return;
+                
+                const existingIndex = studentData.findIndex(s => s.num === num);
+                if(existingIndex >= 0) studentData[existingIndex].name = name;
+                else studentData.push({ num, name });
+            } else {
+                const name = cleanLine;
+                const nextNum = studentData.length > 0 ? Math.max(...studentData.map(s => s.num)) + 1 : 1;
+                studentData.push({ num: nextNum, name });
+            }
+        });
+        
+        renderStudentList();
+        bulkInput.value = '';
+        window.closeModal();
+    });
+
+    let resetTimeout;
+    resetStudentsBtn.addEventListener('click', () => {
+        if (resetStudentsBtn.innerText === "정말 초기화?") {
+            studentData = [];
+            seatingContainer.querySelectorAll('.desk').forEach(desk => {
+                const infoContainer = desk.querySelector('.student-info');
+                if(infoContainer) {
+                    infoContainer.innerHTML = '';
+                    infoContainer.classList.remove('bg-indigo-50', 'border-indigo-200');
+                }
+                desk.classList.remove('pinned'); 
+            });
+            renderStudentList();
+            
+            resetStudentsBtn.innerText = "명단 초기화";
+            resetStudentsBtn.classList.remove('bg-red-500', 'text-white');
+            resetStudentsBtn.classList.add('bg-red-100', 'text-red-700');
+            clearTimeout(resetTimeout);
+        } else {
+            resetStudentsBtn.innerText = "정말 초기화?";
+            resetStudentsBtn.classList.remove('bg-red-100', 'text-red-700');
+            resetStudentsBtn.classList.add('bg-red-500', 'text-white');
+            
+            resetTimeout = setTimeout(() => {
+                resetStudentsBtn.innerText = "명단 초기화";
+                resetStudentsBtn.classList.remove('bg-red-500', 'text-white');
+                resetStudentsBtn.classList.add('bg-red-100', 'text-red-700');
+            }, 3000);
+        }
+    });
+
+    if(auth) { initAuth(); } 
+    else { isDataLoaded = true; renderStudentList(); generateDesks(); }
 </script>
 </body>
 </html>
